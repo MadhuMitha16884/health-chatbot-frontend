@@ -10,6 +10,37 @@ function Wellness() {
 
   const [searchTerm, setSearchTerm] = useState("");
 
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Extract file type display
+    let fileType = "Document";
+    if (file.name.endsWith('.pdf')) fileType = "PDF Report";
+    else if (file.name.endsWith('.png') || file.name.endsWith('.jpg') || file.name.endsWith('.jpeg')) fileType = "Image Record";
+    else if (file.type) fileType = file.type.split('/')[1]?.toUpperCase() || "Document";
+
+    // Format size
+    const sizeInMB = file.size / (1024 * 1024);
+    const sizeStr = sizeInMB < 0.1 
+      ? `${(file.size / 1024).toFixed(0)} KB` 
+      : `${sizeInMB.toFixed(1)} MB`;
+
+    const newReport = {
+      id: Date.now(),
+      name: file.name,
+      type: fileType,
+      date: new Date().toISOString().split('T')[0],
+      size: sizeStr
+    };
+
+    setReports(prev => [newReport, ...prev]);
+  };
+
+  const handleDeleteReport = (id) => {
+    setReports(prev => prev.filter(report => report.id !== id));
+  };
+
   const filteredReports = reports.filter(report => 
     report.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     report.type.toLowerCase().includes(searchTerm.toLowerCase())
@@ -29,7 +60,13 @@ function Wellness() {
 
       {/* Upload Zone Panel */}
       <div className="border-2 border-dashed border-[#bae6fd] hover:border-[rgb(65,65,227)] bg-white rounded-2xl p-8 text-center transition duration-200 cursor-pointer group shadow-sm">
-        <input type="file" id="report-upload" className="hidden" />
+        <input 
+          type="file" 
+          id="report-upload" 
+          className="hidden" 
+          onChange={handleFileUpload} 
+          accept=".pdf,.png,.jpg,.jpeg"
+        />
         <label htmlFor="report-upload" className="cursor-pointer flex flex-col items-center">
           <div className="p-4 bg-[#f0f9ff] border border-[#bae6fd] rounded-xl mb-4 group-hover:scale-105 transition duration-150 shadow-sm text-[rgb(65,65,227)]">
             <UploadCloud className="w-8 h-8" />
@@ -50,7 +87,7 @@ function Wellness() {
             type="text" 
             placeholder="Search documents..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.value)}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-4 py-2 bg-[#f0f9ff]/60 border border-[#bae6fd] rounded-xl text-xs font-bold text-[#0f172a] placeholder-[#0284c7] focus:outline-none focus:border-[rgb(65,65,227)] focus:bg-white transition"
           />
         </div>
@@ -100,7 +137,11 @@ function Wellness() {
                       <button className="p-2 text-[#0284c7] hover:text-[rgb(65,65,227)] hover:bg-[#f0f9ff] rounded-lg transition cursor-pointer" title="View Document">
                         <Eye className="w-4 h-4" />
                       </button>
-                      <button className="p-2 text-[#0284c7] hover:text-[rgb(65,65,227)] hover:bg-[#f0f9ff] rounded-lg transition cursor-pointer" title="Delete Document">
+                      <button 
+                        onClick={() => handleDeleteReport(report.id)}
+                        className="p-2 text-[#0284c7] hover:text-red-500 hover:bg-red-50 rounded-lg transition cursor-pointer" 
+                        title="Delete Document"
+                      >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </td>
