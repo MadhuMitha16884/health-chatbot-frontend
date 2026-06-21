@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MessageSquare, LayoutDashboard, Database, ShieldAlert, HeartPulse, Menu, X, PlusCircle, Trash2 } from 'lucide-react';
 
 function Layout({ 
@@ -14,6 +14,28 @@ function Layout({
 
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [apiStatus, setApiStatus] = useState('checking'); // 'checking' | 'connected' | 'offline'
+
+  useEffect(() => {
+    const checkConnection = async () => {
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      try {
+        const response = await fetch(API_URL);
+        if (response.ok) {
+          setApiStatus('connected');
+        } else {
+          setApiStatus('offline');
+        }
+      } catch (err) {
+        setApiStatus('offline');
+      }
+    };
+
+    checkConnection();
+    // Check connection every 10 seconds
+    const interval = setInterval(checkConnection, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const staticNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -173,8 +195,17 @@ function Layout({
           </button>
           
           {/* Header Badge text size increased */}
-          <div className="text-sm font-mono text-[#1e3a8a] border border-[#bae6fd] rounded-full px-4 py-1.5 bg-[#f0f9ff] font-extrabold">
-            API Status: <span className="text-[rgb(65,65,227)] font-black">Awaiting Connection</span>
+          <div className="text-sm font-mono text-[#1e3a8a] border border-[#bae6fd] rounded-full px-4 py-1.5 bg-[#f0f9ff] font-extrabold flex items-center gap-1.5">
+            API Status: 
+            {apiStatus === 'checking' && (
+              <span className="text-[rgb(65,65,227)] font-black animate-pulse">Awaiting Connection</span>
+            )}
+            {apiStatus === 'connected' && (
+              <span className="text-[#10b981] font-black">Connected 🟢</span>
+            )}
+            {apiStatus === 'offline' && (
+              <span className="text-[#ef4444] font-black">Offline 🔴</span>
+            )}
           </div>
         </header>
 
